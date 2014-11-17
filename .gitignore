@@ -1,0 +1,5 @@
+.DS_Store
+deps/testrunner
+deps/libdopri.dylib
+deps/libdopri.so
+deps/libdopri.dll
