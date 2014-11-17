@@ -105,16 +105,16 @@ end
 
 function objtoints(obj)
     ptr = pointer_from_objref(obj)
-    str = bits(convert(Uint64, ptr))
-    p1 = parseint(Cuint, str[1:32], 2)
-    p2 = parseint(Cuint, str[33:64], 2)
+    p = convert(Uint64, ptr)
+    p1 = convert(Cuint, p >> 32)
+    p2 = convert(Cuint, p << 32 >> 32)
     return [p1, p2]
 end
 
 function intstoobj(int1, int2)
-    str = bits(int1)*bits(int2)
-    i = parseint(Uint64, str, 2)
-    ptr = convert(Ptr{Void},i)
+    p1 = convert(Uint64, int1)
+    p2 = convert(Uint64, unsigned(int2))
+    ptr = convert(Ptr{Void}, p1 << 32 | p2)
     return unsafe_pointer_to_objref(ptr)
 end
 

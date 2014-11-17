@@ -24,11 +24,10 @@ tspan = [0.0, 5402.582703094263]
 mu = 398600.4415
 s0 = [-1814.0, -3708.0, 5153.0, 6.512, -4.229, -0.744]
 
-n = 1000
+n = 10000
 dopri5(newton!, s0, tspan, points=:all, params=mu)
 dop853(newton!, s0, tspan, points=:all, params=mu)
 tau = runner(()->dopri5(newton!, s0, tspan, points=:last, params=mu), n)
 println("DOPRI5:\t$(tau) seconds per loop")
 tau = runner(()->dop853(newton!, s0, tspan, points=:last, params=mu), n)
 println("DOP853:\t$(tau) seconds per loop")
-@profile for i=1:n; dopri5(newton!, s0, tspan, points=:all, params=mu); end
