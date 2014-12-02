@@ -154,3 +154,12 @@ for (vf, vj) in zip(yf8, yj8)
         @test_approx_eq_eps a b tol
     end
 end
+
+# Test dense output
+tspan = [0.0:1.0:tp, tp]
+tj5, yj5 = dopri5(newton!, s0, tspan, points=:specified, params=mu)
+tj8, yj8 = dop853(newton!, s0, tspan, points=:specified, params=mu)
+@test all(s0 .== yj5[1])
+@test all(s0 .== yj8[1])
+@test all(length(yj5) .== length(tspan))
+@test all(length(yj8) .== length(tspan))
