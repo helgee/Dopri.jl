@@ -2,11 +2,11 @@ using Dopri
 
 function runner(f, n)
     tau = 0.0
-    gc_disable()
+    gc_enable(false)
     for i=1:n
         tau += @elapsed(f())
     end
-    gc_enable()
+    gc_enable(true)
     return tau/n
 end
 
