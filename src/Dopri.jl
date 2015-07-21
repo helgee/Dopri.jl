@@ -3,7 +3,8 @@ module Dopri
 export dop853, dopri5
 
 ext = Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
-const lib = "$(Pkg.dir())/Dopri/deps/libdopri.$(ext[OS_NAME])"
+const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
+const lib = "$path/libdopri.$(ext[OS_NAME])"
 
 immutable Irtrn
     value::Cint
@@ -164,7 +165,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 push!(yout, y0, y)
             end
 
-            stats = Dict("nfcn"=>iwork[17],"nstep"=>iwork[18],
+            stats = Dict{String,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
             "naccpt"=>iwork[19], "nrejct"=>iwork[20], "idid"=>idid)
 
             return tout, yout, stats
