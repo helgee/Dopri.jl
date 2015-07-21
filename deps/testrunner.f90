@@ -145,7 +145,7 @@ iwork = 0
 
 call dopri5(n,newton,x,y,xend,rtol,atol,itol,solout,iout,work,lwork,iwork,liwork,rpar,ipar,idid) 
 
-write(*,*)
+write(*,*) "###"
 work = 0d0
 iwork = 0
 x = 0d0

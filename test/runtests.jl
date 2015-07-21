@@ -3,7 +3,12 @@ using Base.Test
 
 # Determine pure Fortran results
 results = open(readlines, `../deps/testrunner`, "r")
-ind = findin(results, [" \n"])[1]
+ind = 0
+for (i, r) in enumerate(results)
+    if ismatch(r"###", r)
+        ind = i
+    end
+end
 tf5 = Float64[]
 yf5 = Array(Vector{Float64},0)
 for i = 1:ind-1
@@ -156,7 +161,7 @@ for (vf, vj) in zip(yf8, yj8)
 end
 
 # Test dense output
-tspan = [0.0:1.0:tp, tp]
+tspan = [0.0:1.0:tp; tp]
 tj5, yj5 = dopri5(newton!, s0, tspan, points=:specified, params=mu)
 tj8, yj8 = dop853(newton!, s0, tspan, points=:specified, params=mu)
 @test all(s0 .== yj5[1])
