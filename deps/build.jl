@@ -8,15 +8,29 @@ function getcompiler()
     end
 end
 
-path = "$(pwd())"
+function unixbuild(compiler, path, ext)
+    if compiler == "ifort"
+        run(`ifort -O3 -xHost -ipo -fpic -c dopri.f90 dop853.f dopri5.f`)
+        run(`ifort -dynamiclib -O3 -xHost -ipo -fpic -o $path/libdopri.$ext)
+            dopri.o dop853.o dopri5.o`)
+        run(`ifort -o testrunner testrunner.f90 -ldopri -L$path`)
+    elseif compiler == "gfortran"
+        run(`gfortran -O3 -fpic -c dopri.f90 dop853.f dopri5.f`)
+        run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext
+            dopri.o dop853.o dopri5.o`)
+        run(`gfortran -o testrunner -O3 testrunner.f90 -ldopri -L$path`)
+    end
+end
+
+function windowsbuild(compiler, path, ext)
+    error("Not yet supported.")
+end
+
 compiler = getcompiler()
+path = splitdir(@__FILE__)[1]
 ext = Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
-dyn = Dict("ifort" => "-dynamiclib", "gfortran" => "-shared")
-i8 = Dict("ifort" => "-i8", "gfortran" => "-fdefault-integer-8")
-run(`$compiler -fpic -c dopri.f90 dop853.f dopri5.f`)
-run(`$compiler $(dyn[compiler]) -fpic -o $path/libdopri.$(ext[OS_NAME])
-    dopri.o dop853.o dopri5.o`)
-run(`$compiler -o testrunner testrunner.f90 -ldopri -L$path`)
+
+@unix ? unixbuild(compiler, path, ext[OS_NAME]) : windowsbuild(compiler, path, ext[OS_NAME])
 
 for f in ["dopri.o", "dop853.o", "dopri5.o", "dopri.mod"]
     rm(f)
