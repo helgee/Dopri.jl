@@ -1,7 +1,8 @@
 function getcompiler()
-    if success(`ifort --version`)
+    which = @unix ? `which` : `where`
+    if success(`$which ifort`)
         return "ifort"
-    elseif success(`gfortran --version`)
+    elseif success(`$which gfortran`)
         return "gfortran"
     else
         error("No compatible Fortran compiler found.")
