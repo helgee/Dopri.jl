@@ -2,7 +2,7 @@ module Dopri
 
 using Compat
 
-export dop853, dopri5
+export dop853, dopri5, dopricode
 
 ext = @compat Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
 const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
@@ -11,7 +11,7 @@ const lib = "$path/libdopri.$(ext[OS_NAME])"
 immutable Irtrn
     value::Cint
 end
-returncodes = @compat Dict(:abort => Irtrn(-1),
+dopricode = @compat Dict(:abort => Irtrn(-1),
     :altered => Irtrn(2),
     :nominal => Irtrn(0))
 
@@ -59,21 +59,21 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         end
     end
     if tnk.S! != dummy && t != told
-        contd(i, t) = contd(i, t, tnk, _con, _icomp, _nd)
+        contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
         # Call the intermediate output function and assert that it
         # returns a valid return code.
         ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
-        unsafe_store!(ret.value, _irtrn, 1)
+        unsafe_store!(_irtrn, ret.value, 1)
     end
     return nothing
 end
 
-function contd(i::Int, t::Float64, tnk::Thunk, _con::Ptr{Cdouble},
+function _contd(i::Int, t, tnk::Thunk, _con::Ptr{Cdouble},
     _icomp::Ptr{Cint}, _nd::Ptr{Cint})
     if ~in(i, tnk.dense)
         error("No dense output available for element '$i'.")
     end
-    return tnk.contd(i, ts, _con, _icomp, _nd)
+    return tnk.contd(i, Float64(t), _con, _icomp, _nd)
 end
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
@@ -113,7 +113,8 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
         function $(fn)(F!::Function, y0, tspan;
             params::Any=[], atol::Vector{Float64}=fill(sqrt(eps()), length(y0)),
             points::Symbol=:all, rtol::Vector{Float64}=fill(1e-6, length(y0)),
-            solout::Function=dummy, dense::Vector{Int}=Int[])
+            solout::Function=dummy, dense::Vector{Int}=collect(1:length(y0)),
+            verbose::Bool=false)
             x = tspan[1]
             xend = tspan[end]
             y = copy(y0)
@@ -124,6 +125,9 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             liwork = n + 21
             work = zeros(Cdouble, lwork)
             iwork = zeros(Cint, liwork)
+            if ~verbose
+                iwork[3] = -1
+            end
             rpar = zeros(Cdouble, 1)
             idid = 0
 
@@ -145,6 +149,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 iout = 2
                 if points != :last
                     iwork[5] = n
+                    dense = collect(1:n)
                 elseif length(dense) != 0
                     iwork[5] = length(dense)
                     for (i, el) in enumerate(dense)
