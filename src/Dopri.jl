@@ -68,12 +68,13 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
     return nothing
 end
 
-function _contd(i::Int, t, tnk::Thunk, _con::Ptr{Cdouble},
+function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
     _icomp::Ptr{Cint}, _nd::Ptr{Cint})
     if ~in(i, tnk.dense)
         error("No dense output available for element '$i'.")
     end
-    return tnk.contd(i, @compat Float64(t), _con, _icomp, _nd)
+    t = @compat Float64(_t)
+    return tnk.contd(i, t, _con, _icomp, _nd)
 end
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
