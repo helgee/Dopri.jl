@@ -2,7 +2,9 @@ using Dopri
 using Base.Test
 
 # Determine pure Fortran results
-results = open(readlines, `../deps/testrunner`, "r")
+path = splitdir(@__FILE__)[1]
+deps = normpath(joinpath(path,"..","deps"))
+results = open(readlines, `$deps/testrunner`, "r")
 ind = 0
 for (i, r) in enumerate(results)
     if ismatch(r"###", r)
