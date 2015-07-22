@@ -4,8 +4,10 @@ using Base.Test
 # Determine pure Fortran results
 path = splitdir(@__FILE__)[1]
 deps = normpath(joinpath(path,"..","deps"))
-print(readdir(deps))
-results = open(readlines, `$deps/testrunner`, "r")
+withenv("LD_LIBRARY_PATH"=>deps) do
+    global results
+    results = open(readlines, `$deps/testrunner`, "r")
+end
 ind = 0
 for (i, r) in enumerate(results)
     if ismatch(r"###", r)
