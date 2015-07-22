@@ -16,6 +16,7 @@ returncodes = @compat Dict(:abort => Irtrn(-1),
     :nominal => Irtrn(0))
 
 type Thunk
+    tspan::Vector{Float64}
     t::Vector{Float64}
     y::Vector{Vector{Float64}}
     F!::Function
@@ -37,27 +38,30 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         told = unsafe_load(_xold, 1)
         y = unsafe_load(_y, n)
     end
-    if tnk.points == :all
+
+    if tnk.points != :last && t == told
         push!(tnk.t, t)
         push!(tnk.y, copy(pointer_to_array(_y, n)))
-    elseif tnk.points == :specified && t != 0.0
+    elseif tnk.points != :last && t != told
         told = unsafe_load(_xold, 1)
-        times = tnk.t[(tnk.t .> told) & (tnk.t .<= t)]
+        times = tnk.tspan[(tnk.tspan .> told) & (tnk.tspan .< t)]
         for ts in times
-            if ts == t
-                push!(tnk.y, copy(pointer_to_array(_y, n)))
-            else
-                yout = Float64[]
-                for i=1:n
-                    push!(yout, tnk.contd(i, ts, _con, _icomp, _nd))
-                end
-                push!(tnk.y, yout)
+            push!(tnk.t, ts)
+            yout = Float64[]
+            for i=1:n
+                push!(yout, tnk.contd(i, ts, _con, _icomp, _nd))
             end
+            push!(tnk.y, yout)
+        end
+        if t in tnk.tspan || tnk.points == :all
+            push!(tnk.t, t)
+            push!(tnk.y, copy(pointer_to_array(_y, n)))
         end
     end
-    if tnk.S! != dummy && t != 0.0
+    if tnk.S! != dummy && t != told
         contd(i, t) = contd(i, t, tnk, _con, _icomp, _nd)
-        # Call the intermediate output function and assert that the returned 
+        # Call the intermediate output function and assert that it
+        # returns a valid return code.
         ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
         unsafe_store!(ret.value, _irtrn, 1)
     end
@@ -137,24 +141,22 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
 
             # iout=1 -> solout is called after every integration step
             # iout=2 -> solout is called and dense output is performed
-            if points == :specified || (solout != dummy && length(dense) != 0)
+            if points != :last || (solout != dummy && length(dense) != 0)
                 iout = 2
-                if points == :specified
+                if points != :last
                     iwork[5] = n
-                    tout = tspan
-                    push!(yout, y0)
                 elseif length(dense) != 0
                     iwork[5] = length(dense)
                     for (i, el) in enumerate(dense)
                         iwork[20+i] = el
                     end
                 end
-            elseif points == :all || (solout != dummy && length(dense) == 0)
+            elseif points == :last || (solout != dummy && length(dense) == 0)
                 iout = 1
             elseif points == :last || solout == dummy
                 iout = 0
             end
-            tnk = Thunk(tout, yout, F!, solout, points, params, $(dfn), dense)
+            tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense)
             ipar = objtoints(tnk)
 
             ccall(($(sym), lib), Void, ($(doparg...),),
