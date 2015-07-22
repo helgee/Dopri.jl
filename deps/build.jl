@@ -1,3 +1,5 @@
+using Compat
+
 function getcompiler()
     which = @unix ? `which` : `where`
     if success(`$which ifort`)
@@ -29,7 +31,7 @@ end
 
 compiler = getcompiler()
 path = splitdir(@__FILE__)[1]
-ext = Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
+ext = @compat Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
 
 @unix ? unixbuild(compiler, path, ext[OS_NAME]) : windowsbuild(compiler, path, ext[OS_NAME])
 

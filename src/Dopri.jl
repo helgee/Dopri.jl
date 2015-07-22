@@ -1,15 +1,17 @@
 module Dopri
 
+using Compat
+
 export dop853, dopri5
 
-ext = Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
+ext = @compat Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
 const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
 const lib = "$path/libdopri.$(ext[OS_NAME])"
 
 immutable Irtrn
     value::Cint
 end
-returncodes = Dict(:abort => Irtrn(-1),
+returncodes = @compat Dict(:abort => Irtrn(-1),
     :altered => Irtrn(2),
     :nominal => Irtrn(0))
 
@@ -165,7 +167,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 push!(yout, y0, y)
             end
 
-            stats = Dict{String,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
+            stats = @compat Dict{String,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
             "naccpt"=>iwork[19], "nrejct"=>iwork[20], "idid"=>idid)
 
             return tout, yout, stats
