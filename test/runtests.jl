@@ -261,7 +261,8 @@ function solout!(told, t, y, contd, params)
         for i = 1:6
             yout[i+1] = contd(i, 5000)
         end
-        merge!(params, @compat Dict("yout"=>yout))
+        d = @compat Dict{String, Any}("yout"=>yout)
+        merge!(params, d)
         return dopricode[:abort]
     else
         return dopricode[:nominal]
