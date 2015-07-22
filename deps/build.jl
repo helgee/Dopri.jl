@@ -14,7 +14,7 @@ end
 function unixbuild(compiler, path, ext)
     if compiler == "ifort"
         run(`ifort -O3 -xHost -ipo -fpic -c dopri.f90 dop853.f dopri5.f`)
-        run(`ifort -dynamiclib -O3 -xHost -ipo -fpic -o $path/libdopri.$ext)
+        run(`ifort -dynamiclib -O3 -xHost -ipo -fpic -o $path/libdopri.$ext
             dopri.o dop853.o dopri5.o`)
         run(`ifort -o testrunner testrunner.f90 -ldopri -L$path`)
     elseif compiler == "gfortran"
