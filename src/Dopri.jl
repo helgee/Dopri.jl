@@ -73,7 +73,7 @@ function _contd(i::Int, t, tnk::Thunk, _con::Ptr{Cdouble},
     if ~in(i, tnk.dense)
         error("No dense output available for element '$i'.")
     end
-    return tnk.contd(i, Float64(t), _con, _icomp, _nd)
+    return tnk.contd(i, @compat Float64(t), _con, _icomp, _nd)
 end
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
