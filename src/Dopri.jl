@@ -137,8 +137,8 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 either scalar or vector form.")
             end
             if length(rtol) == 1
-                rtol = [rtol]
-                atol = [atol]
+                rtol = collect(rtol)
+                atol = collect(atol)
                 itol = 0
             else
                 itol = 1
