@@ -175,7 +175,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 push!(yout, y0, y)
             end
 
-            stats = @compat Dict{String,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
+            stats = @compat Dict{AbstractString,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
             "naccpt"=>iwork[19], "nrejct"=>iwork[20], "idid"=>idid)
 
             return tout, yout, stats
@@ -193,19 +193,19 @@ end
 function objtoints(obj)
     ptr = pointer_from_objref(obj)
     if WORD_SIZE == 64
-        p = convert(Uint64, ptr)
+        p = convert(UInt64, ptr)
         p1 = convert(Cuint, p >> 32)
         p2 = convert(Cuint, p << 32 >> 32)
         return [p1, p2]
     else
-        return [convert(Uint32, ptr)]
+        return [convert(UInt32, ptr)]
     end
 end
 
 function intstoobj(arr)
     if WORD_SIZE == 64
-        p1 = convert(Uint64, unsafe_load(arr, 1))
-        p2 = convert(Uint64, unsigned(unsafe_load(arr,2)))
+        p1 = convert(UInt64, unsafe_load(arr, 1))
+        p2 = convert(UInt64, unsigned(unsafe_load(arr,2)))
         ptr = convert(Ptr{Void}, p1 << 32 | p2)
     else
         ptr = convert(Ptr{Void}, unsafe_load(arr,1))
