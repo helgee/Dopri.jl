@@ -180,7 +180,7 @@ function newton!(f, t, y, p)
     f[3] = y[6]
     f[4] = -p.mu*y[1]/r3
     f[5] = -p.mu*y[2]/r3
-    f[6] = -p.mu*y[3]/r3    
+    f[6] = -p.mu*y[3]/r3
 end
 
 type Params
