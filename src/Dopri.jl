@@ -36,7 +36,7 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         n = unsafe_load(_n, 1)
         t = unsafe_load(_x, 1)
         told = unsafe_load(_xold, 1)
-        y = unsafe_load(_y, n)
+        y = pointer_to_array(_y, n)
     end
 
     if tnk.points != :last && t == told
