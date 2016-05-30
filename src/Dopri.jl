@@ -96,11 +96,11 @@ const soloutarg = (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
     Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
     Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint},
     Ptr{Cdouble})
-const doparg = (Ptr{Cint}, Ptr{Void}, Ptr{Cdouble},
-    Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ptr{Cint}, Ptr{Void}, Ptr{Cint}, Ptr{Cdouble},
-    Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cdouble},
-    Ptr{Cuint}, Ptr{Cint})
+const doparg = (Ref{Cint}, Ptr{Void}, Ref{Cdouble},
+    Ptr{Cdouble}, Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
+    Ref{Cint}, Ptr{Void}, Ref{Cint}, Ptr{Cdouble},
+    Ref{Cint}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble},
+    Ptr{Cuint}, Ref{Cint})
 
 cfcn = cfunction(_fcn, Void, fcnarg)
 csolout = cfunction(_solout, Void, soloutarg)
@@ -115,7 +115,10 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             params::Any=[], atol::Vector{Float64}=fill(sqrt(eps()), length(y0)),
             points::Symbol=:all, rtol::Vector{Float64}=fill(1e-6, length(y0)),
             solout::Function=dummy, dense::Vector{Int}=collect(1:length(y0)),
-            verbose::Bool=false)
+            verbose::Bool=false, safety::Float64=0.9, step_params::Vector{Float64}=[0.0,0.0],
+            beta::Float64=0.0, maxstep::Float64=tspan[end]-tspan[1], initstep::Float64=0.0,
+            numsteps::Int=100000, stiffness::Int=1000,
+            )
             x = tspan[1]
             xend = tspan[end]
             y = copy(y0)
@@ -124,11 +127,19 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             yout = Array(Vector{Float64},0)
             lwork = 11*n + 8*n + 21
             liwork = n + 21
-            work = zeros(Cdouble, lwork)
-            iwork = zeros(Cint, liwork)
+            work = zeros(Float64, lwork)
+            iwork = zeros(Int32, liwork)
+            work[2] = safety
+            work[3:4] = step_params
+            work[5] = beta
+            work[6] = maxstep
+            work[7] = initstep
+            println(work)
             if ~verbose
                 iwork[3] = -1
             end
+            iwork[1] = numsteps
+            iwork[4] = stiffness
             rpar = zeros(Cdouble, 1)
             idid = 0
 
@@ -166,11 +177,11 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             ipar = objtoints(tnk)
 
             ccall(($(sym), lib), Void, ($(doparg...),),
-                &n, cfcn, &x, y, &xend, rtol, atol,
-                &itol, csolout, &iout, work, &lwork, iwork,
-                &liwork, rpar, ipar, &idid)
+                Ref(convert(Cint,n)), cfcn, Ref(convert(Cdouble, x)), y, Ref(convert(Cdouble, xend)), rtol, atol,
+                Ref(convert(Cint, itol)), csolout, Ref(convert(Cint, iout)), work, Ref(convert(Cint, lwork)), iwork,
+                Ref(convert(Cint, liwork)), rpar, ipar, Ref(convert(Cint, idid)))
 
-            if iout == 0
+            if points == :last
                 push!(tout, tspan...)
                 push!(yout, y0, y)
             end

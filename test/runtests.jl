@@ -30,42 +30,42 @@ yf5 = Array(Vector{Float64},0)
 for i = 1:ind1-1
     v = float(split(results[i]))
     push!(tf5, v[1])
-    push!(yf5, v[2:6])
+    push!(yf5, v[2:7])
 end
 tf8 = Float64[]
 yf8 = Array(Vector{Float64},0)
 for i = ind1+1:ind2-1
     v = float(split(results[i]))
     push!(tf8, v[1])
-    push!(yf8, v[2:6])
+    push!(yf8, v[2:7])
 end
 tf5spc = Float64[]
 yf5spc = Array(Vector{Float64},0)
 for i = ind2+1:ind3-1
     v = float(split(results[i]))
     push!(tf5spc, v[1])
-    push!(yf5spc, v[2:6])
+    push!(yf5spc, v[2:7])
 end
 tf8spc = Float64[]
 yf8spc = Array(Vector{Float64},0)
 for i = ind3+1:ind4-1
     v = float(split(results[i]))
     push!(tf8spc, v[1])
-    push!(yf8spc, v[2:6])
+    push!(yf8spc, v[2:7])
 end
 tf5all = Float64[]
 yf5all = Array(Vector{Float64},0)
 for i = ind4+1:ind5-1
     v = float(split(results[i]))
     push!(tf5all, v[1])
-    push!(yf5all, v[2:6])
+    push!(yf5all, v[2:7])
 end
 tf8all = Float64[]
 yf8all = Array(Vector{Float64},0)
 for i = ind5+1:length(results)
     v = float(split(results[i]))
     push!(tf8all, v[1])
-    push!(yf8all, v[2:6])
+    push!(yf8all, v[2:7])
 end
 
 # Low-level interface
@@ -189,6 +189,17 @@ type Params
 end
 p = Params(mu, Float64[])
 tspan = [0.0, tp]
+tj5, yj5 = dopri5(newton!, s0, tspan, points=:last, params=p, maxstep=1.0)
+tj8, yj8 = dop853(newton!, s0, tspan, points=:last, params=p, maxstep=1.0)
+@test length(tj5) == 2
+@test length(yj5) == 2
+@test length(tj8) == 2
+@test length(tj8) == 2
+@test tj5 == tspan
+@test tj8 == tspan
+@test yj5[end] ≈ yf5[end]
+@test yj8[end] ≈ yf8[end]
+
 tj5, yj5 = dopri5(newton!, s0, tspan, points=:all, params=p)
 tj8, yj8 = dop853(newton!, s0, tspan, points=:all, params=p)
 @test length(tf5) == length(tj5)
