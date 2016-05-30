@@ -189,8 +189,8 @@ type Params
 end
 p = Params(mu, Float64[])
 tspan = [0.0, tp]
-tj5, yj5 = dopri5(newton!, s0, tspan, points=:last, params=p, maxstep=1.0)
-tj8, yj8 = dop853(newton!, s0, tspan, points=:last, params=p, maxstep=1.0)
+tj5, yj5 = dopri5(newton!, s0, tspan, points=:last, params=p, maxstep=10.0)
+tj8, yj8 = dop853(newton!, s0, tspan, points=:last, params=p, maxstep=10.0)
 @test length(tj5) == 2
 @test length(yj5) == 2
 @test length(tj8) == 2
