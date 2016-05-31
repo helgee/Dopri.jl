@@ -199,8 +199,8 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
         function $(dfn)(ii::Int, x::Float64, con::Ptr{Cdouble},
             icomp::Ptr{Cint}, nd::Ptr{Cint})
             ccall(($(dsym), lib), Cdouble,
-                (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}),
-                &ii, &x, con, icomp, nd)
+                (Ref{Cint}, Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}),
+                Ref{Cint}(ii), Ref{Cdouble}(x), con, icomp, nd)
         end
     end
 end
