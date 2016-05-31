@@ -32,6 +32,13 @@ function solout(nr::Ptr{Cint}, xold::Ptr{Cdouble}, x::Ptr{Cdouble},
     return nothing
 end
 
+cnewton = cfunction(newton, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
+    Ptr{Void}))
+csolout = cfunction(solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
+    Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
+    Ptr{Cint}, Ptr{Void}, Ptr{Cint},
+    Ptr{Cdouble}))
+
 @testset "Low-Level" begin
     p = Params(398600.4415, Vector{Float64}(), Vector{Vector{Float64}}())
     s0 = [-1814.0, -3708.0, 5153.0, 6.512, -4.229, -0.744]
@@ -59,12 +66,6 @@ end
     _liwork = Ref{Cint}(liwork)
     _idid = Ref{Cint}(idid)
     _tnk = pointer_from_objref(p)
-    cnewton = cfunction(newton, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ptr{Void}))
-    csolout = cfunction(solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
-    Ptr{Cint}, Ptr{Void}, Ptr{Cint},
-    Ptr{Cdouble}))
 
     ccall((:c_dopri5, Dopri.lib), Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
         Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ref{Cint},
