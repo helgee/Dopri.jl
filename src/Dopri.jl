@@ -1,12 +1,22 @@
+__precompile__()
+
 module Dopri
 
 using Compat
 
 export dop853, dopri5, dopricode
 
-const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
-const ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
-const lib = "$path/libdopri.$ext"
+function __init__()
+    global const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
+    global const ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
+    global const lib = "$path/libdopri.$ext"
+    global const cfcn = cfunction(_fcn, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
+        Ptr{Void}))
+    global const csolout = cfunction(_solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
+        Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
+        Ptr{Cint}, Ptr{Void}, Ptr{Cint},
+        Ptr{Cdouble}))
+end
 
 immutable Irtrn
     value::Cint
@@ -91,13 +101,6 @@ function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble
     tnk.F!(f, t, y, tnk.params)
     return nothing
 end
-
-cfcn = cfunction(_fcn, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
-Ptr{Void}))
-csolout = cfunction(_solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
-Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
-Ptr{Cint}, Ptr{Void}, Ptr{Cint},
-Ptr{Cdouble}))
 
 syms = ["c_dopri5", "c_dop853"]
 fcns = [:dopri5, :dop853]
