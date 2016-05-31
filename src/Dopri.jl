@@ -32,7 +32,7 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
     _nd::Ptr{Cint}, _tnk::Ptr{Void}, _irtrn::Ptr{Cint},
     _xout::Ptr{Cdouble})
 
-    tnk = unsafe_pointer_to_objref(_tnk)
+    tnk = unsafe_pointer_to_objref(_tnk)::Thunk
 
     if tnk.points != :last || tnk.S! != dummy
         n = unsafe_load(_n, 1)
@@ -83,7 +83,7 @@ dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
 
 function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble},
     _tnk::Ptr{Void})
-    tnk = unsafe_pointer_to_objref(_tnk)
+    tnk = unsafe_pointer_to_objref(_tnk)::Thunk
     n = unsafe_load(_n, 1)
     t = unsafe_load(_x, 1)
     y = pointer_to_array(_y, n)
