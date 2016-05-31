@@ -9,6 +9,17 @@ function newton!(f, t, y, p)
     f[6] = -p.mu*y[3]/r3
 end
 
+function newton1!(f, t, y, mu)
+    r = sqrt(y[1]*y[1]+y[2]*y[2]+y[3]*y[3])
+    r3 = r*r*r
+    f[1] = y[4]
+    f[2] = y[5]
+    f[3] = y[6]
+    f[4] = -mu*y[1]/r3
+    f[5] = -mu*y[2]/r3
+    f[6] = -mu*y[3]/r3
+end
+
 type HighLevel
     mu::Float64
     yout::Vector{Float64}
@@ -20,8 +31,8 @@ end
     s0 = [-1814.0, -3708.0, 5153.0, 6.512, -4.229, -0.744]
     tp = 5402.582703094263
     tspan = [0.0, tp]
-    tj5, yj5 = dopri5(newton!, s0, tspan, points=:last, params=p)
-    tj8, yj8 = dop853(newton!, s0, tspan, points=:last, params=p)
+    tj5, yj5 = dopri5(newton1!, s0, tspan, points=:last, params=mu)
+    tj8, yj8 = dop853(newton1!, s0, tspan, points=:last, params=mu)
     @test length(tj5) == 2
     @test length(yj5) == 2
     @test length(tj8) == 2
