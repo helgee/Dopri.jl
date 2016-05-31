@@ -113,7 +113,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             points::Symbol=:all, rtol::Vector{Float64}=fill(1e-6, length(y0)),
             solout::Function=dummy, dense::Vector{Int}=collect(1:length(y0)),
             verbose::Bool=false, safety::Float64=0.9, step_params::Vector{Float64}=[0.0,0.0],
-            beta::Float64=0.0, maxstep::Float64=tspan[end]-tspan[1], initstep::Float64=0.0,
+            beta::Float64=0.0, maxstep::Real=tspan[end]-tspan[1], initstep::Float64=0.0,
             numsteps::Int=100000, stiffness::Int=1000,
             )
             x = tspan[1]
