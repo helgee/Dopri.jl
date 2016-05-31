@@ -1,7 +1,7 @@
 using Compat
 
 function getcompiler()
-    which = @unix ? `which` : `where`
+    which = is_unix() ? `which` : `where`
     if success(`$which ifort`)
         return "ifort"
     elseif success(`$which gfortran`)
@@ -31,9 +31,10 @@ end
 
 compiler = getcompiler()
 path = splitdir(@__FILE__)[1]
-ext = @compat Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
+ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
 
-@unix ? unixbuild(compiler, path, ext[OS_NAME]) : windowsbuild(compiler, path, ext[OS_NAME])
+build() = is_unix() ? unixbuild(compiler, path, ext) : windowsbuild(compiler, path, ext)
+build()
 
 for f in ["dopri.o", "dop853.o", "dopri5.o", "dopri.mod"]
     rm(f)

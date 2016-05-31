@@ -4,9 +4,9 @@ using Compat
 
 export dop853, dopri5, dopricode
 
-ext = @compat Dict(:Windows => "dll", :Darwin => "dylib", :Linux => "so")
 const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
-const lib = "$path/libdopri.$(ext[OS_NAME])"
+const ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
+const lib = "$path/libdopri.$ext"
 
 immutable Irtrn
     value::Cint
