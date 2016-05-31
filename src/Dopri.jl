@@ -29,9 +29,11 @@ end
 
 function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
     _y::Ptr{Cdouble}, _n::Ptr{Cint}, _con::Ptr{Cdouble}, _icomp::Ptr{Cint},
-    _nd::Ptr{Cint}, _rpar::Ptr{Cdouble}, _ipar::Ptr{Cint}, _irtrn::Ptr{Cint},
+    _nd::Ptr{Cint}, _tnk::Ptr{Void}, _irtrn::Ptr{Cint},
     _xout::Ptr{Cdouble})
-    tnk = intstoobj(_ipar)
+
+    tnk = unsafe_pointer_to_objref(_tnk)
+
     if tnk.points != :last || tnk.S! != dummy
         n = unsafe_load(_n, 1)
         t = unsafe_load(_x, 1)
@@ -80,8 +82,8 @@ end
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
 
 function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble},
-    _rpar::Ptr{Cdouble}, _ipar::Ptr{Cint})
-    tnk = intstoobj(_ipar)
+    _tnk::Ptr{Void})
+    tnk = unsafe_pointer_to_objref(_tnk)
     n = unsafe_load(_n, 1)
     t = unsafe_load(_x, 1)
     y = pointer_to_array(_y, n)
@@ -90,20 +92,12 @@ function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble
     return nothing
 end
 
-const fcnarg = (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ptr{Cdouble}, Ptr{Cint})
-const soloutarg = (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
-    Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint},
-    Ptr{Cdouble})
-const doparg = (Ref{Cint}, Ptr{Void}, Ref{Cdouble},
-    Ptr{Cdouble}, Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
-    Ref{Cint}, Ptr{Void}, Ref{Cint}, Ptr{Cdouble},
-    Ref{Cint}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble},
-    Ptr{Cuint}, Ref{Cint})
-
-cfcn = cfunction(_fcn, Void, fcnarg)
-csolout = cfunction(_solout, Void, soloutarg)
+cfcn = cfunction(_fcn, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
+Ptr{Void}))
+csolout = cfunction(_solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
+Ptr{Cdouble}, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint},
+Ptr{Cint}, Ptr{Void}, Ptr{Cint},
+Ptr{Cdouble}))
 
 syms = ["c_dopri5", "c_dop853"]
 fcns = [:dopri5, :dop853]
@@ -134,7 +128,6 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             work[5] = beta
             work[6] = maxstep
             work[7] = initstep
-            println(work)
             if ~verbose
                 iwork[3] = -1
             end
@@ -174,12 +167,23 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 iout = 0
             end
             tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense)
-            ipar = objtoints(tnk)
 
-            ccall(($(sym), lib), Void, ($(doparg...),),
-                Ref(convert(Cint,n)), cfcn, Ref(convert(Cdouble, x)), y, Ref(convert(Cdouble, xend)), rtol, atol,
-                Ref(convert(Cint, itol)), csolout, Ref(convert(Cint, iout)), work, Ref(convert(Cint, lwork)), iwork,
-                Ref(convert(Cint, liwork)), rpar, ipar, Ref(convert(Cint, idid)))
+            _n = Ref{Cint}(n)
+            _x = Ref{Cdouble}(x)
+            _xend = Ref{Cdouble}(xend)
+            _itol = Ref{Cint}(itol)
+            _iout = Ref{Cint}(iout)
+            _lwork = Ref{Cint}(lwork)
+            _liwork = Ref{Cint}(liwork)
+            _idid = Ref{Cint}(idid)
+            _tnk = pointer_from_objref(tnk)
+            ccall(($(sym), lib), Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
+                Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ref{Cint},
+                Ptr{Void}, Ref{Cint}, Ptr{Cdouble}, Ref{Cint}, Ptr{Cint},
+                Ref{Cint}, Ptr{Void}, Ref{Cint}),
+                _n, cfcn, _x, y, _xend, rtol, atol,
+                _itol, csolout, _iout, work, _lwork, iwork,
+                _liwork, _tnk, _idid)
 
             if points == :last
                 push!(tout, tspan...)
@@ -199,29 +203,6 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 &ii, &x, con, icomp, nd)
         end
     end
-end
-
-function objtoints(obj)
-    ptr = pointer_from_objref(obj)
-    if WORD_SIZE == 64
-        p = convert(UInt64, ptr)
-        p1 = convert(Cuint, p >> 32)
-        p2 = convert(Cuint, p << 32 >> 32)
-        return [p1, p2]
-    else
-        return [convert(UInt32, ptr)]
-    end
-end
-
-function intstoobj(arr)
-    if WORD_SIZE == 64
-        p1 = convert(UInt64, unsafe_load(arr, 1))
-        p2 = convert(UInt64, unsigned(unsafe_load(arr,2)))
-        ptr = convert(Ptr{Void}, p1 << 32 | p2)
-    else
-        ptr = convert(Ptr{Void}, unsafe_load(arr,1))
-    end
-    return unsafe_pointer_to_objref(ptr)
 end
 
 end # module

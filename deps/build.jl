@@ -13,14 +13,10 @@ end
 
 function unixbuild(compiler, path, ext)
     if compiler == "ifort"
-        run(`ifort -O3 -xHost -ipo -fpic -c dopri.f90 dop853.f dopri5.f`)
-        run(`ifort -dynamiclib -O3 -xHost -ipo -fpic -o $path/libdopri.$ext
-            dopri.o dop853.o dopri5.o`)
+        run(`ifort -$(is_apple() ? "dynamiclib" : "shared") -O3 -xHost -ipo -fpic -o $path/libdopri.$ext dopri.f90`)
         run(`ifort -o testrunner testrunner.f90 -ldopri -L$path`)
     elseif compiler == "gfortran"
-        run(`gfortran -O3 -fpic -c dopri.f90 dop853.f dopri5.f`)
-        run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext
-            dopri.o dop853.o dopri5.o`)
+        run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext dopri.f90`)
         run(`gfortran -o testrunner -O3 testrunner.f90 -ldopri -L$path`)
     end
 end
@@ -36,6 +32,6 @@ ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
 build() = is_unix() ? unixbuild(compiler, path, ext) : windowsbuild(compiler, path, ext)
 build()
 
-for f in ["dopri.o", "dop853.o", "dopri5.o", "dopri.mod"]
+for f in ["dopri.mod"]
     rm(f)
 end
