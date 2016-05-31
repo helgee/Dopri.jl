@@ -18,7 +18,7 @@ function newton!(f, t, y, mu)
     f[3] = y[6]
     f[4] = -mu*y[1]/r3
     f[5] = -mu*y[2]/r3
-    f[6] = -mu*y[3]/r3    
+    f[6] = -mu*y[3]/r3
 end
 tspan = [0.0, 5402.582703094263]
 mu = 398600.4415
