@@ -1,14 +1,5 @@
 using Dopri
-
-function runner(f, n)
-    tau = 0.0
-    gc_enable(false)
-    for i=1:n
-        tau += @elapsed(f())
-    end
-    gc_enable(true)
-    return tau/n
-end
+using BenchmarkTools
 
 function newton!(f, t, y, mu)
     r = sqrt(y[1]*y[1]+y[2]*y[2]+y[3]*y[3])
@@ -24,10 +15,11 @@ tspan = [0.0, 5402.582703094263]
 mu = 398600.4415
 s0 = [-1814.0, -3708.0, 5153.0, 6.512, -4.229, -0.744]
 
-n = 10000
-dopri5(newton!, s0, tspan, points=:all, params=mu)
-dop853(newton!, s0, tspan, points=:all, params=mu)
-tau = runner(()->dopri5(newton!, s0, tspan, points=:last, params=mu), n)
-println("DOPRI5:\t$(tau) seconds per loop")
-tau = runner(()->dop853(newton!, s0, tspan, points=:last, params=mu), n)
-println("DOP853:\t$(tau) seconds per loop")
+b5 = @benchmark dopri5(newton!, s0, tspan, points=:last, params=mu)
+b8 = @benchmark dop853(newton!, s0, tspan, points=:last, params=mu)
+println("DOPRI5\n$b5")
+println("DOP853\n$b8")
+
+n = 1_00_000
+@profile for i=1:n; dop853(newton!, s0, tspan, points=:last, params=mu); end
+Profile.print()

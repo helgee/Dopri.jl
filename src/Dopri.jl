@@ -25,6 +25,14 @@ dopricode = @compat Dict(:abort => Irtrn(-1),
     :altered => Irtrn(2),
     :nominal => Irtrn(0))
 
+type DopriResults
+    nfcn::Int
+    nstep::Int
+    naccpt::Int
+    nrejct::Int
+    idid::Int
+end
+
 type Thunk
     tspan::Vector{Float64}
     t::Vector{Float64}
@@ -51,23 +59,21 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         y = pointer_to_array(_y, n)
     end
 
-    if tnk.points != :last && t == told
-        push!(tnk.t, t)
-        push!(tnk.y, copy(pointer_to_array(_y, n)))
-    elseif tnk.points != :last && t != told
-        told = unsafe_load(_xold, 1)
-        times = tnk.tspan[(tnk.tspan .> told) & (tnk.tspan .< t)]
-        for ts in times
-            push!(tnk.t, ts)
-            yout = Float64[]
-            for i=1:n
-                push!(yout, tnk.contd(i, ts, _con, _icomp, _nd))
+    if tnk.points != :last && t != told
+        if length(tnk.tspan) > 2
+            times = tnk.tspan[(tnk.tspan .> told) & (tnk.tspan .< t)]
+            for ts in times
+                push!(tnk.t, ts)
+                yout = Array(Float64, n)
+                for i = 1:n
+                    yout[i] = tnk.contd(i, ts, _con, _icomp, _nd)
+                end
+                push!(tnk.y, yout)
             end
-            push!(tnk.y, yout)
         end
-        if t in tnk.tspan || tnk.points == :all
+        if tnk.points == :all || t in tnk.tspan
             push!(tnk.t, t)
-            push!(tnk.y, copy(pointer_to_array(_y, n)))
+            push!(tnk.y, copy(y))
         end
     end
     if tnk.S! != dummy && t != told
@@ -116,12 +122,13 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             beta::Float64=0.0, maxstep::Real=tspan[end]-tspan[1], initstep::Float64=0.0,
             numsteps::Int=100000, stiffness::Int=1000,
             )
-            x = tspan[1]
-            xend = tspan[end]
-            y = copy(y0)
-            n = length(y0)
-            tout = Float64[]
+            x = Float64(tspan[1])
+            xend = Float64(tspan[end])
+            y = Vector{Float64}(copy(y0))
+            n = length(y)
+            tout = Float64[x]
             yout = Array(Vector{Float64},0)
+            push!(yout, copy(y))
             lwork = 11*n + 8*n + 21
             liwork = n + 21
             work = zeros(Float64, lwork)
@@ -136,7 +143,6 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             end
             iwork[1] = numsteps
             iwork[4] = stiffness
-            rpar = zeros(Cdouble, 1)
             idid = 0
 
             if length(rtol) != length(atol)
@@ -166,7 +172,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 end
             elseif points == :last || (solout != dummy && length(dense) == 0)
                 iout = 1
-            elseif points == :last || solout == dummy
+            elseif points == :last && solout == dummy
                 iout = 0
             end
             tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense)
@@ -189,12 +195,11 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
                 _liwork, _tnk, _idid)
 
             if points == :last
-                push!(tout, tspan...)
-                push!(yout, y0, y)
+                push!(tout, xend)
+                push!(yout, y)
             end
 
-            stats = @compat Dict{AbstractString,Int}("nfcn"=>iwork[17],"nstep"=>iwork[18],
-            "naccpt"=>iwork[19], "nrejct"=>iwork[20], "idid"=>idid)
+            stats = DopriResults(iwork[17], iwork[18], iwork[19], iwork[20], idid)
 
             return tout, yout, stats
         end
