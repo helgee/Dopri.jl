@@ -45,6 +45,22 @@ type Thunk
     dense::Vector{Int}
 end
 
+abstract DopriException <: Exception
+
+type DopriStiff <: DopriException
+    msg::AbstractString
+end
+
+type DopriSmallStep <: DopriException
+    msg::AbstractString
+end
+
+type DopriMaxStep <: DopriException
+    msg::AbstractString
+end
+
+Base.show(io::IO, err::DopriException) = print(io, err.msg)
+
 function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
     _y::Ptr{Cdouble}, _n::Ptr{Cint}, _con::Ptr{Cdouble}, _icomp::Ptr{Cint},
     _nd::Ptr{Cint}, _tnk::Ptr{Void}, _irtrn::Ptr{Cint},
@@ -197,6 +213,17 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             if points == :last
                 push!(tout, xend)
                 push!(yout, y)
+            end
+
+            idid = _idid[]
+            if idid == -1
+                error("Input is not consistent.")
+            elseif idid == -2
+                throw(DopriMaxStep("Larger nmax needed."))
+            elseif idid == -3
+                throw(DopriSmallStep("Step size becomes too small."))
+            elseif idid == -4
+                throw(DopriStiff("Problem is probably stiff (interrupted)."))
             end
 
             stats = DopriResults(iwork[17], iwork[18], iwork[19], iwork[20], idid)

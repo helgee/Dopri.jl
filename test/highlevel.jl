@@ -25,6 +25,12 @@ type HighLevel
     yout::Vector{Float64}
 end
 
+function robertson!(f, t, y, p)
+    f[1] = -0.04*y[1] + 10^4*y[2]*y[3]
+    f[2] = 0.04*y[1] - 10^4*y[2]*y[3] - 3e7*y[2]^2
+    f[3] = 3e7*y[2]^2
+end
+
 @testset "High-Level" begin
     mu = 398600.4415
     p = HighLevel(mu, Vector{Float64}())
@@ -104,4 +110,12 @@ end
     p = HighLevel(mu, Float64[])
     tj8, yj8 = dop853(newton!, s0, tspan, solout=solout!, params=p)
     @test [tf8spc[5001]; yf8spc[5001]] ≈ p.yout
+
+    # Test error handling
+    tspan = [0.0, tp]
+    @test_throws ErrorException dopri5(newton1!, s0, tspan, params=mu, safety=-1.0)
+    @test_throws Dopri.DopriMaxStep dopri5(newton1!, s0, tspan, params=mu, maxstep=1e-20)
+    tspan = [0.0, 0.0]
+    @test_throws Dopri.DopriSmallStep dopri5(newton1!, s0, tspan, params=mu)
+    @test_throws Dopri.DopriStiff dopri5(robertson!, [1,0,0], [0,10^11])
 end
