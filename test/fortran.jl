@@ -1,7 +1,8 @@
 # Determine pure Fortran results
 path = splitdir(@__FILE__)[1]
 deps = normpath(joinpath(path,"..","deps"))
-cmd = setenv(`$deps/testrunner`, ["LD_LIBRARY_PATH=$(ENV["LD_LIBRARY_PATH"]):$deps"])
+ldpath = haskey(ENV, "LD_LIBRARY_PATH") ? "$(ENV["LD_LIBRARY_PATH"]):$deps" : deps
+cmd = setenv(`$deps/testrunner`, ["LD_LIBRARY_PATH=$ldpath"])
 results = open(readlines, cmd, "r")
 ind1 = 0
 ind2 = 0
