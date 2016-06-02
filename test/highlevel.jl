@@ -115,6 +115,7 @@ end
     tspan = [0.0, tp]
     @test_throws ErrorException dopri5(newton1!, s0, tspan, params=mu, safety=-1.0)
     @test_throws Dopri.DopriMaxStep dopri5(newton1!, s0, tspan, params=mu, maxstep=1e-20)
+    @test_throws Dopri.DopriMaxStep dopri5(newton1!, s0, tspan, params=mu, numstep=1)
     tspan = [0.0, 0.0]
     @test_throws Dopri.DopriSmallStep dopri5(newton1!, s0, tspan, params=mu)
     @test_throws Dopri.DopriStiff dopri5(robertson!, [1,0,0], [0,10^11])

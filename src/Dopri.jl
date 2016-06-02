@@ -136,7 +136,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             solout::Function=dummy, dense::Vector{Int}=collect(1:length(y0)),
             verbose::Bool=false, safety::Float64=0.9, step_params::Vector{Float64}=[0.0,0.0],
             beta::Float64=0.0, maxstep::Real=tspan[end]-tspan[1], initstep::Float64=0.0,
-            numsteps::Int=100000, stiffness::Int=1000,
+            numstep::Int=100000, stiffness::Int=1000,
             )
             x = Float64(tspan[1])
             xend = Float64(tspan[end])
@@ -157,7 +157,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             if ~verbose
                 iwork[3] = -1
             end
-            iwork[1] = numsteps
+            iwork[1] = numstep
             iwork[4] = stiffness
             idid = 0
 
