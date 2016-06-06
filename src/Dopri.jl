@@ -92,8 +92,12 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
             push!(tnk.y, copy(y))
         end
     end
-    if tnk.S! != dummy && t != told
-        contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
+    if tnk.S! != dummy
+        if t == told
+            contd(i, t) = startcond(i, t)
+        else
+            contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
+        end
         # Call the intermediate output function and assert that it
         # returns a valid return code.
         ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
@@ -110,6 +114,8 @@ function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
     t = @compat Float64(_t)
     return tnk.contd(i, t, _con, _icomp, _nd)
 end
+
+startcond(i, t) = error("Dense output function called at t=0.0.")
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
 

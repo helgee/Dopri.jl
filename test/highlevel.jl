@@ -95,6 +95,9 @@ end
 
     # Test solout interface
     function solout!(told, t, y, contd, params)
+        if t == told
+            return dopricode[:nominal]
+        end
         if told < 5000 < t
             push!(params.yout, 5000.0)
             for i = 1:6
@@ -119,4 +122,9 @@ end
     tspan = [0.0, 0.0]
     @test_throws Dopri.DopriSmallStep dopri5(newton1!, s0, tspan, params=mu)
     @test_throws Dopri.DopriStiff dopri5(robertson!, [1,0,0], [0,10^11])
+
+    function solouterror!(told, t, y, contd, params)
+        y = contd(1, t/2)
+    end
+    @test_throws ErrorException dopri5(newton1!, s0, tspan, params=mu, solout=solouterror!)
 end
