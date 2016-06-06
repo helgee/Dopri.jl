@@ -43,6 +43,7 @@ type Thunk
     params::Any
     contd::Function
     dense::Vector{Int}
+    first::Bool
 end
 
 abstract DopriException <: Exception
@@ -93,7 +94,12 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         end
     end
     if tnk.S! != dummy
-        contd(i, t) = t == told ? startcontd(i, t) : _contd(i, t, tnk, _con, _icomp, _nd)
+        if t == told
+            tnk.first = true
+        else
+            tnk.first = false
+        end
+        contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
         # Call the intermediate output function and assert that it
         # returns a valid return code.
         ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
@@ -104,6 +110,9 @@ end
 
 function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
     _icomp::Ptr{Cint}, _nd::Ptr{Cint})
+    if tnk.first
+        error("Dense output function called at t=0.0.")
+    end
     if ~in(i, tnk.dense)
         error("No dense output available for element '$i'.")
     end
@@ -111,7 +120,6 @@ function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
     return tnk.contd(i, t, _con, _icomp, _nd)
 end
 
-startcontd(i, t) = error("Dense output function called at t=0.0.")
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
 
@@ -193,7 +201,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             elseif points == :last && solout == dummy
                 iout = 0
             end
-            tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense)
+            tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense, false)
 
             _n = Ref{Cint}(n)
             _x = Ref{Cdouble}(x)
