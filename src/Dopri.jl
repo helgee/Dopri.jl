@@ -93,10 +93,7 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         end
     end
     if tnk.S! != dummy
-        contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
-        if t == told
-            contd(i, t) = startcontd(i, t)
-        end
+        contd(i, t) = t == told ? startcontd(i, t) : _contd(i, t, tnk, _con, _icomp, _nd)
         # Call the intermediate output function and assert that it
         # returns a valid return code.
         ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
