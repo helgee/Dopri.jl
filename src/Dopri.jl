@@ -93,10 +93,9 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         end
     end
     if tnk.S! != dummy
+        contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
         if t == told
-            contd(i, t) = startcond(i, t)
-        else
-            contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
+            contd(i, t) = startcontd(i, t)
         end
         # Call the intermediate output function and assert that it
         # returns a valid return code.
@@ -115,7 +114,7 @@ function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
     return tnk.contd(i, t, _con, _icomp, _nd)
 end
 
-startcond(i, t) = error("Dense output function called at t=0.0.")
+startcontd(i, t) = error("Dense output function called at t=0.0.")
 
 dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
 
