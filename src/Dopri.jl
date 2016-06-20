@@ -40,7 +40,6 @@ type Thunk
     F!::Function
     S!::Function
     points::Symbol
-    params::Any
     contd::Function
     dense::Vector{Int}
     first::Bool
@@ -102,7 +101,7 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         contd(i, t) = _contd(i, t, tnk, _con, _icomp, _nd)
         # Call the intermediate output function and assert that it
         # returns a valid return code.
-        ret::Irtrn = tnk.S!(told, t, y, contd, tnk.params)
+        ret::Irtrn = tnk.S!(told, t, y, contd)
         unsafe_store!(_irtrn, ret.value, 1)
     end
     return nothing
@@ -121,7 +120,7 @@ function _contd(i::Int, _t, tnk::Thunk, _con::Ptr{Cdouble},
 end
 
 
-dummy(xold, x, y, xout, irtrn, contd, params) = return nothing
+dummy(xold, x, y, xout, irtrn, contd) = return nothing
 
 function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble},
     _tnk::Ptr{Void})
@@ -130,7 +129,7 @@ function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble
     t = unsafe_load(_x, 1)
     y = pointer_to_array(_y, n)
     f = pointer_to_array(_f, n)
-    tnk.F!(f, t, y, tnk.params)
+    tnk.F!(f, t, y)
     return nothing
 end
 
@@ -141,7 +140,7 @@ dfcns = [:contd5, :contd8]
 for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
     @eval begin
         function $(fn)(F!::Function, y0, tspan;
-            params::Any=[], atol::Vector{Float64}=fill(sqrt(eps()), length(y0)),
+            atol::Vector{Float64}=fill(sqrt(eps()), length(y0)),
             points::Symbol=:all, rtol::Vector{Float64}=fill(1e-6, length(y0)),
             solout::Function=dummy, dense::Vector{Int}=collect(1:length(y0)),
             verbose::Bool=false, safety::Float64=0.9, step_params::Vector{Float64}=[0.0,0.0],
@@ -201,7 +200,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             elseif points == :last && solout == dummy
                 iout = 0
             end
-            tnk = Thunk(tspan, tout, yout, F!, solout, points, params, $(dfn), dense, false)
+            tnk = Thunk(tspan, tout, yout, F!, solout, points, $(dfn), dense, false)
 
             _n = Ref{Cint}(n)
             _x = Ref{Cdouble}(x)

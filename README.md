@@ -28,7 +28,6 @@ The only differences are the mutating user function `F!` (see below) and a few a
 
 The following keyword arguments are supported:
 
-* `params`: A Julia object containing additional parameters that are passed to the user functions.
 * `atol`: Vector of absolute tolerances. Default: `sqrt(eps())`.
 * `rtol`: Vector of realtive tolerances. Default: `1e-6`.
 * `points`
@@ -41,16 +40,15 @@ The following keyword arguments are supported:
 
 ### User Functions
 ```julia
-F!(f, t, y, params) = ...
+F!(f, t, y) = ...
 ```
 
 * `f`: `f=dy/dt`
 * `t`: Current step.
 * `y`: Current state vector.
-* `params`: User parameters (see above).
 
 ```julia
-solout!(told, t, y, contd, params) = ... return dopricode[:nominal]
+solout!(told, t, y, contd) = ... return dopricode[:nominal]
 ```
 
 If the user supplies a `solout` function, it will be called after every successful integration step. Within `solout` the `contd` function can be used to approximate state vector components between the current and the preceding integration step via dense output.
@@ -59,10 +57,18 @@ If the user supplies a `solout` function, it will be called after every successf
 * `t`: Current step.
 * `y`: Current state vector.
 * `contd`: `yi = contd(i, t1)` Get dense output `yi` for component `i` at `t1` with `told < t1 < t`.
-* `params`: User parameters (see above).
 
 `solout` must return one of the following return codes:
 
 * `dopricode[:nominal]`: If the integration shall continue nominally.
 * `dopricode[:altered]`: If numerical solution was altered in `solout`.
 * `dopricode[:abort]`: If the integration shall be stopped.
+
+### Passing Additional Parameters to User Functions
+
+A closure can be used to pass additional parameters to the user functions, e.g.:
+
+```julia
+parameter = pi
+tout, yout = dop853((f, t, y) -> F!(f, t, y, parameter), y0, tspan)
+```
