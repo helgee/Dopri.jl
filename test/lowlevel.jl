@@ -9,7 +9,7 @@ function newton(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdoub
     p = unsafe_pointer_to_objref(_tnk)
     mu = p.mu
     n = unsafe_load(_n, 1)
-    y = pointer_to_array(_y, n)
+    y = unsafe_wrap(Array, _y, n, false)
     r = sqrt(y[1]*y[1]+y[2]*y[2]+y[3]*y[3])
     r3 = r*r*r
     unsafe_store!(_f, y[4], 1)
@@ -27,7 +27,7 @@ function solout(nr::Ptr{Cint}, xold::Ptr{Cdouble}, x::Ptr{Cdouble},
     xout::Ptr{Cdouble})
     p = unsafe_pointer_to_objref(_tnk)
     push!(p.tout, unsafe_load(x, 1))
-    y = copy(pointer_to_array(_y, unsafe_load(n, 1)))
+    y = copy(unsafe_wrap(Array, _y, unsafe_load(n, 1), false))
     push!(p.yout, y)
     return nothing
 end
