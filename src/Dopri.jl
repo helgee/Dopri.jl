@@ -72,7 +72,7 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
         n = unsafe_load(_n, 1)
         t = unsafe_load(_x, 1)
         told = unsafe_load(_xold, 1)
-        y = pointer_to_array(_y, n)
+        y = unsafe_wrap(Array, _y, n, false)
     end
 
     if tnk.points != :last && t != told
@@ -127,8 +127,8 @@ function _fcn(_n::Ptr{Cint}, _x::Ptr{Cdouble}, _y::Ptr{Cdouble}, _f::Ptr{Cdouble
     tnk = unsafe_pointer_to_objref(_tnk)::Thunk
     n = unsafe_load(_n, 1)
     t = unsafe_load(_x, 1)
-    y = pointer_to_array(_y, n)
-    f = pointer_to_array(_f, n)
+    y = unsafe_wrap(Array, _y, n, false)
+    f = unsafe_wrap(Array, _f, n, false)
     tnk.F!(f, t, y)
     return nothing
 end
