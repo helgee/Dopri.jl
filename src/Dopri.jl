@@ -6,10 +6,12 @@ using Compat
 
 export dop853, dopri5, dopricode
 
+const lib = normpath(joinpath(dirname(@__FILE__), "..", "deps", "libdopri"))
+
 function __init__()
-    global const path = normpath(joinpath(splitdir(@__FILE__)[1],"..","deps"))
-    global const ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
-    global const lib = "$path/libdopri.$ext"
+    if Libdl.dlopen_e(lib) == C_NULL
+        error("Please run Pkg.build(\"Dopri\").")
+    end
     global const cfcn = cfunction(_fcn, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble},
         Ptr{Void}))
     global const csolout = cfunction(_solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
