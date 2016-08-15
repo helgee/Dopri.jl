@@ -39,6 +39,11 @@ csolout = cfunction(solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
     Ptr{Cint}, Ptr{Void}, Ptr{Cint},
     Ptr{Cdouble}))
 
+libdopri = Libdl.dlopen(Dopri.lib)
+c_dopri5 = Libdl.dlsym(libdopri, :c_dopri5)
+c_dop853 = Libdl.dlsym(libdopri, :c_dop853)
+Libdl.dlclose(libdopri)
+
 @testset "Low-Level" begin
     p = Params(398600.4415, Vector{Float64}(), Vector{Vector{Float64}}())
     s0 = [-1814.0, -3708.0, 5153.0, 6.512, -4.229, -0.744]
@@ -67,7 +72,7 @@ csolout = cfunction(solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
     _idid = Ref{Cint}(idid)
     _tnk = pointer_from_objref(p)
 
-    ccall((:c_dopri5, Dopri.lib), Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
+    ccall(c_dopri5, Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
         Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ref{Cint},
         Ptr{Void}, Ref{Cint}, Ptr{Cdouble}, Ref{Cint}, Ptr{Cint},
         Ref{Cint}, Ptr{Void}, Ref{Cint}),
@@ -89,7 +94,7 @@ csolout = cfunction(solout, Void, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble},
     _x = Ref{Cdouble}(x)
     _idid = Ref{Cint}(idid)
 
-    ccall((:c_dop853, Dopri.lib), Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
+    ccall(c_dop853, Void, (Ref{Cint}, Ptr{Void}, Ref{Cdouble}, Ptr{Cdouble},
         Ref{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Ref{Cint},
         Ptr{Void}, Ref{Cint}, Ptr{Cdouble}, Ref{Cint}, Ptr{Cint},
         Ref{Cint}, Ptr{Void}, Ref{Cint}),
