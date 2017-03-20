@@ -22,7 +22,10 @@ function unixbuild(compiler, path, ext)
 end
 
 function windowsbuild(compiler, path, ext)
-    error("Not yet supported.")
+    if compiler == "gfortran"
+        run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext dopri.f90`)
+        run(`gfortran -o testrunner -O3 testrunner.f90 -ldopri -L$path`)
+    end
 end
 
 compiler = getcompiler()
