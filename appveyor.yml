@@ -19,7 +19,8 @@ notifications:
     on_build_status_changed: false
 
 install:
-  - ps: if ($env:PROCESSOR_ARCHITECTURE) {$env:PATH="$env:PATH;C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+  - ps: echo $env:PROCESSOR_ARCHITECTURE
+  - ps: if ($env:PROCESSOR_ARCHITECTURE -match "x86") {$env:PATH="$env:PATH;C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
       } else {$env:PATH="$env:PATH;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"}
   - gfortran --version
 # Download most recent Julia Windows binary
