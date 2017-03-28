@@ -21,8 +21,9 @@ function unixbuild(compiler, path, ext)
 end
 
 function windowsbuild(path)
-    #  gfortran -shared -O3 -fpic -o libdopri64.dll -static-libgfortran dopri.f90
-    #  gfortran -shared -O3 -fpic -m32 -o libdopri32.dll -static-libgfortran dopri.f90
+    # Compiled with GFortran from http://tdm-gcc.tdragon.net/
+    # gfortran -static -O3 -fpic -m64 -o libdopri64.dll dopri.f90
+    # gfortran -static -O3 -fpic -m32 -o libdopri32.dll dopri.f90
     download("https://dl.bintray.com/helgee/Dopri.jl/libdopri$(Sys.WORD_SIZE).dll",
         "$path/libdopri.dll")
 end
