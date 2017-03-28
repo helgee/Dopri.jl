@@ -1,13 +1,12 @@
 # Dopri.jl
 
 [![Build Status](https://travis-ci.org/helgee/Dopri.jl.svg)](https://travis-ci.org/helgee/Dopri.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/aj34gxo8noq5lecp?svg=true)](https://ci.appveyor.com/project/helgee/dopri-jl)
 [![Coverage Status](https://coveralls.io/repos/helgee/Dopri.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/helgee/Dopri.jl?branch=master)
 
 Dopri.jl is a Julia wrapper for the DOPRI5 and DOP853 integrators by [Ernst Hairer](http://www.unige.ch/~hairer/software.html).
 
 ## Install
-
-__Note:__ Windows is currently not supported.
 
 You need to have either __Gfortran__ or the __Intel Fortran Compiler__ installed to be able to build the binary dependencies. Dopri.jl can then be installed through Julia's package manager.
 

@@ -47,7 +47,7 @@ type Thunk
     first::Bool
 end
 
-abstract DopriException <: Exception
+@compat abstract type DopriException <: Exception end
 
 type DopriStiff <: DopriException
     msg::AbstractString
@@ -79,10 +79,10 @@ function _solout(_nr::Ptr{Cint}, _xold::Ptr{Cdouble}, _x::Ptr{Cdouble},
 
     if tnk.points != :last && t != told
         if length(tnk.tspan) > 2
-            times = tnk.tspan[(tnk.tspan .> told) & (tnk.tspan .< t)]
+            times = tnk.tspan[(tnk.tspan .> told) .& (tnk.tspan .< t)]
             for ts in times
                 push!(tnk.t, ts)
-                yout = Array(Float64, n)
+                yout = Array{Float64}(n)
                 for i = 1:n
                     yout[i] = tnk.contd(i, ts, _con, _icomp, _nd)
                 end
@@ -154,7 +154,7 @@ for (fn, sym, dfn, dsym) in zip(fcns, syms, dfcns, dsyms)
             y = Vector{Float64}(copy(y0))
             n = length(y)
             tout = Float64[x]
-            yout = Array(Vector{Float64},0)
+            yout = Array{Vector{Float64}}(0)
             push!(yout, copy(y))
             lwork = 11*n + 8*n + 21
             liwork = n + 21
