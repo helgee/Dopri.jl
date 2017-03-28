@@ -16,27 +16,23 @@ end
 function unixbuild(compiler, path, ext)
     if compiler == "ifort"
         run(`ifort -$(is_apple() ? "dynamiclib" : "shared") -O3 -xHost -ipo -fpic -o $path/libdopri.$ext dopri.f90`)
-        run(`ifort -o testrunner testrunner.f90 -ldopri -L$path`)
     elseif compiler == "gfortran"
         run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext dopri.f90`)
-        run(`gfortran -o testrunner -O3 testrunner.f90 -ldopri -L$path`)
     end
 end
 
-function windowsbuild(compiler, path, ext)
-    if compiler == "gfortran"
-        run(`gfortran -shared -O3 -fpic -o $path/libdopri.$ext dopri.f90`)
-        run(`gfortran -o testrunner -O3 testrunner.f90 -ldopri -L$path`)
-    end
+function windowsbuild(path)
+    download("https://dl.bintray.com/helgee/Dopri.jl/libdopri$(Sys.WORD_SIZE).dll",
+        "$path/libdopri.dll")
 end
 
 compiler = getcompiler()
 path = splitdir(@__FILE__)[1]
 ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
 
-build() = is_unix() ? unixbuild(compiler, path, ext) : windowsbuild(compiler, path, ext)
+build() = is_unix() ? unixbuild(compiler, path, ext) : windowsbuild(path)
 build()
 
 for f in ["dopri.mod"]
-    rm(f)
+    rm(f, force=true)
 end

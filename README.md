@@ -8,7 +8,8 @@ Dopri.jl is a Julia wrapper for the DOPRI5 and DOP853 integrators by [Ernst Hair
 
 ## Install
 
-You need to have either __Gfortran__ or the __Intel Fortran Compiler__ installed to be able to build the binary dependencies. Dopri.jl can then be installed through Julia's package manager.
+Dopri.jl can then be installed through Julia's package manager.
+On Linux and macOS you need to have either __Gfortran__ or the __Intel Fortran Compiler__ installed to be able to build the binary dependencies.
 
 ```julia
 Pkg.add("Dopri")
