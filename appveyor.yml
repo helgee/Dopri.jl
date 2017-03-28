@@ -19,7 +19,6 @@ notifications:
     on_build_status_changed: false
 
 install:
-  - ps: echo $env:PROCESSOR_ARCHITECTURE
   - ps: if ($env:JULIAVERSION.EndsWith("win32.exe")) {$env:PATH="$env:PATH;C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
       } else {$env:PATH="$env:PATH;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"}
   - gfortran --version
@@ -32,7 +31,6 @@ install:
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
-  - set FC=
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
       Pkg.clone(pwd(), \"Dopri\"); Pkg.build(\"Dopri\")"
