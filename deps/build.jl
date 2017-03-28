@@ -1,6 +1,8 @@
 using Compat
 
 function getcompiler()
+    haskey(ENV, "FC") && return ENV["FC"]
+
     which = is_unix() ? `which` : `where`
     if success(`$which ifort`)
         return "ifort"

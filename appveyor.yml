@@ -19,6 +19,9 @@ notifications:
     on_build_status_changed: false
 
 install:
+  - ps: if ($env:PROCESSOR_ARCHITECTURE) {$env:PATH="$env:PATH;C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+      } else {$env:PATH="$env:PATH;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"}
+  - gfortran --version
 # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
@@ -28,6 +31,7 @@ install:
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
+  - set FC=
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
       Pkg.clone(pwd(), \"Dopri\"); Pkg.build(\"Dopri\")"
