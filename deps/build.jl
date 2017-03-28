@@ -3,10 +3,9 @@ using Compat
 function getcompiler()
     haskey(ENV, "FC") && return ENV["FC"]
 
-    which = is_unix() ? `which` : `where`
-    if success(`$which ifort`)
+    if success(`which ifort`)
         return "ifort"
-    elseif success(`$which gfortran`)
+    elseif success(`which gfortran`)
         return "gfortran"
     else
         error("No compatible Fortran compiler found.")
@@ -22,13 +21,15 @@ function unixbuild(compiler, path, ext)
 end
 
 function windowsbuild(path)
+    #  gfortran -shared -O3 -fpic -o libdopri64.dll -static-libgfortran dopri.f90
+    #  gfortran -shared -O3 -fpic -m32 -o libdopri32.dll -static-libgfortran dopri.f90
     download("https://dl.bintray.com/helgee/Dopri.jl/libdopri$(Sys.WORD_SIZE).dll",
         "$path/libdopri.dll")
 end
 
-compiler = getcompiler()
-path = splitdir(@__FILE__)[1]
-ext = is_windows() ? "dll" : is_apple() ? "dylib" : "so"
+compiler = is_unix() ? getcompiler() : ""
+path = dirname(@__FILE__)
+ext = is_apple() ? "dylib" : "so"
 
 build() = is_unix() ? unixbuild(compiler, path, ext) : windowsbuild(path)
 build()
