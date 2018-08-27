@@ -1,3 +1,5 @@
+**This package is deprecated and will not be maintained anymore because all use cases are covered by the [DifferentialEquations.jl](http://docs.juliadiffeq.org/latest/index.html) ecosystem.** 
+
 # Dopri.jl
 
 [![Build Status](https://travis-ci.org/helgee/Dopri.jl.svg)](https://travis-ci.org/helgee/Dopri.jl)
